@@ -2,6 +2,7 @@ import * as React from 'react';
 import {createRoot} from 'react-dom/client';
 
 import '../src/assets/style.css';
+import congratulationsImg from './assets/congratulations.png'
 
 async function addSticky() {
   const stickyNote = await miro.board.createStickyNote({
@@ -19,7 +20,7 @@ const App = () => {
   return (
     <div className="grid wrapper">
       <div className="cs1 ce12">
-        <img src="/src/assets/congratulations.png" alt="" />
+        <img src={congratulationsImg} alt="" />
       </div>
       <div className="cs1 ce12">
         <h1>Congratulations!</h1>
