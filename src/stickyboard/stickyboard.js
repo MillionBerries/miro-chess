@@ -112,8 +112,17 @@ export const createBoard = async (boardX=0, boardY=0) => {
   return {frame, chess}
 }
 
+const movePieceItem = async (frame, piece, row, col) => {
+  const {x, y} = coordsForPosition(frame, row, col);
+  piece.x = x
+  piece.y = y
+  await piece.setMetadata('position', {row, col});
+  await piece.sync();
+}
+
 export const movePiece = async ({frame, chess}, piece) => {
   console.log(piece);
+  console.log(chess.ascii())
 
   const {row: newRow, col: newCol} = positionForCoords(frame, piece.x, piece.y)
   const {row: oldRow, col: oldCol} = await piece.getMetadata('position')
@@ -174,6 +183,24 @@ export const movePiece = async ({frame, chess}, piece) => {
         } else {
           await miro.board.remove(capturees[0])
         }
+      } else if(move.flags.includes('k') || move.flags.includes('q')) {
+        // castling
+        const cStartCol = move.flags.includes('q') ? 0 : 7
+        const cEndCol = move.flags.includes('q') ? 3 : 5
+
+        const children = await frame.getChildren();
+        const pieces = children.filter((e) => e.content)
+        const castlees = pieces
+          .filter((p) => {
+            const {row, col} = positionForCoords(frame, p.x, p.y);
+            return row == newRow && col == cStartCol;
+          })
+
+        if(castlees.length != 1) {
+          console.error("Something is wrong with castling")
+        } else {
+          await movePieceItem(frame, castlees[0], newRow, cEndCol)
+        }
       }
 
       setRow = newRow
@@ -184,9 +211,5 @@ export const movePiece = async ({frame, chess}, piece) => {
     
   }
 
-  const {x, y} = coordsForPosition(frame, setRow, setCol);
-  piece.x = x
-  piece.y = y
-  await piece.setMetadata('position', {row:setRow, col:setCol});
-  await piece.sync();
+  await movePieceItem(frame, piece, setRow, setCol);
 }
