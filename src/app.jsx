@@ -17,11 +17,11 @@ async function addSticky() {
 const initializeBoard = async () => {
   console.log("REINITIALIZED__________________________")
 
-  const frame = await createBoard();
+  const {frame, chess} = await createBoard();
 
   miro.board.ui.on('experimental:items:update', async (evt) => {
     if(evt.items.length == 1 && frame.childrenIds.includes(evt.items[0].id)) {
-      movePiece(frame, evt.items[0])
+      movePiece({frame, chess}, evt.items[0])
     }
   });
 }

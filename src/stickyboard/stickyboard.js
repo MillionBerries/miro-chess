@@ -1,3 +1,5 @@
+import { Chess } from 'chess.js'
+
 const cellSize = 50;
 const cellsInBoard = 8;
 
@@ -13,7 +15,7 @@ const coordsForPosition = (frame, row, col) => {
   
   return {
     x: frameX + col * cellSize + cellSize / 2,
-    y: frameY + row * cellSize + cellSize / 2,
+    y: frameY + frame.height - (row * cellSize + cellSize / 2),
   };
 }
 
@@ -21,9 +23,17 @@ const positionForCoords = (frame, x, y) => {
   const {frameX, frameY} = frameXY(frame);
 
   return {
-    row: Math.round((y - frameY - cellSize / 2) / cellSize),
+    row: Math.round((frameY + frame.height - y - cellSize / 2) / cellSize),
     col: Math.round((x - frameX - cellSize / 2) / cellSize),
   }
+}
+
+const notationForPosition = (row, col) => {
+  return 'abcdefgh'[col] + (row+1);
+}
+
+const positionForNotation = (notation) => {
+  assert(false, "Not implemented")
 }
 
 const placePiece = async (frame, type='♚', color='w', row, col) => {
@@ -46,6 +56,7 @@ const placePiece = async (frame, type='♚', color='w', row, col) => {
     },
     });
 
+  await shape.setMetadata('position', {row, col});
   await frame.add(shape);
 }
 
@@ -96,20 +107,46 @@ export const createBoard = async (boardX=0, boardY=0) => {
   //await placePiece(frame, '♚', 'w', 0, 0)
   await placeStartingPieces(frame);
 
-  return frame
+  const chess = new Chess()
+  
+  return {frame, chess}
 }
 
-export const movePiece = async (frame, piece) => {
-  console.log(frame);
+export const movePiece = async ({frame, chess}, piece) => {
   console.log(piece);
 
-  const {row, col} = positionForCoords(frame, piece.x, piece.y)
-  const {x, y} = coordsForPosition(frame, row, col);
+  const {row: newRow, col: newCol} = positionForCoords(frame, piece.x, piece.y)
+  const {row: oldRow, col: oldCol} = await piece.getMetadata('position')
+  var setRow = oldRow;
+  var setCol = oldCol;
 
-  console.log(row, col)
+  if( newRow >= 0 && newRow < cellsInBoard && 
+      newCol >= 0 && newCol < cellsInBoard &&
+      (newRow != oldRow || newCol != oldCol)
+  ) {
+    const oldNotation = notationForPosition(oldRow, oldCol);
+    const newNotation = notationForPosition(newRow, newCol);
 
+    console.log(oldRow, oldCol);
+    console.log(newRow, newCol);
+    console.log(oldNotation, newNotation);
+
+    try {
+      const move = chess.move({from: oldNotation, to: newNotation})
+
+      console.log(move)
+
+      setRow = newRow
+      setCol = newCol
+    } catch (error) {
+      console.log('Made an invalid move', error)
+    }
+    
+  }
+
+  const {x, y} = coordsForPosition(frame, setRow, setCol);
   piece.x = x
   piece.y = y
-
+  await piece.setMetadata('position', {row:setRow, col:setCol});
   await piece.sync();
 }
