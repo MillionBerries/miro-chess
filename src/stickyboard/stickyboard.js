@@ -21,6 +21,8 @@ const coordsForPosition = (frame, row, col) => {
 
 const positionForCoords = (frame, x, y) => {
   const {frameX, frameY} = frameXY(frame);
+  console.log(frameX, frameY)
+  console.log(frame)
 
   return {
     row: Math.round((frameY + frame.height - y - cellSize / 2) / cellSize),
@@ -116,11 +118,13 @@ export const createBoard = async (boardX=0, boardY=0) => {
 }
 
 const movePieceItem = async (frame, piece, row, col) => {
+  await frame.remove(piece);
   const {x, y} = coordsForPosition(frame, row, col);
   piece.x = x
   piece.y = y
   await piece.setMetadata('position', {row, col});
   await piece.sync();
+  await frame.add(piece);
 }
 
 export const movePiece = async ({frame, chess}, piece) => {
@@ -132,6 +136,9 @@ export const movePiece = async ({frame, chess}, piece) => {
   let setRow = oldRow;
   let setCol = oldCol;
 
+  console.log(oldRow, oldCol);
+  console.log(newRow, newCol);
+
   if( newRow >= 0 && newRow < cellsInBoard && 
       newCol >= 0 && newCol < cellsInBoard &&
       (newRow != oldRow || newCol != oldCol)
@@ -139,8 +146,6 @@ export const movePiece = async ({frame, chess}, piece) => {
     const oldNotation = notationForPosition(oldRow, oldCol);
     const newNotation = notationForPosition(newRow, newCol);
 
-    console.log(oldRow, oldCol);
-    console.log(newRow, newCol);
     console.log(oldNotation, newNotation);
 
     try {
