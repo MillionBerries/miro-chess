@@ -3,6 +3,7 @@ import {createRoot} from 'react-dom/client';
 
 import '../src/assets/style.css';
 import congratulationsImg from './assets/congratulations.png'
+import { deleteAllBoards } from './functions/deleteAllBoards';
 
 const App = () => {
   React.useEffect(() => {
@@ -13,20 +14,24 @@ const App = () => {
   }, []);
 
   return (
-    <div className="grid wrapper">
-      <div className="cs1 ce12">
+    <div >
+      <div className="">
         <img src={congratulationsImg} alt="" />
       </div>
-      <div className="cs1 ce12">
-        <a
+      <hr></hr>
+      <div className="buttons-container">
+        <button
           className="button button-primary"
-          target="_blank"
-          href="https://developers.miro.com"
+          onClick={() => deleteAllBoards()}
         >
           Delete all boards
-        </a>
+        </button>
       </div>
-      <div className="miro-draggable">Drag me to create a board</div>
+      <hr></hr>
+      <div className="miro-draggable draggable-container">
+        <div className='chessboard'></div>
+        <div className='p-large'> Drag me to create a board </div>
+        </div>
     </div>
   );
 };
