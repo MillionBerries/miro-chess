@@ -136,6 +136,30 @@ export const movePiece = async ({frame, chess}, piece) => {
 
       console.log(move)
 
+      if(move.san.includes('x')) { //if there was a capture
+        /* Captures are kinda hard since we need to find the item
+           Seems like we have basically two options: either set piece's square as a tag
+           or just iterate through all of the frame's items and find the right one.
+           Both suck, since former requires keeping track of the tag handles - yes you cannot get tags by name, nice API
+           And also seems like tags are gonna be drawn
+           There is also a third option - to keep track of it in a map on our side. But I guess I will try out searching first
+        */
+
+        const children = await frame.getChildren();
+        const capturees = children.filter((e) => e.content) //only the pieces
+          .filter((p) => {
+            const {row, col} = positionForCoords(frame, p.x, p.y);
+            return row == newRow && col == newCol;
+          })
+          .filter((p) => p.id != piece.id)
+
+        if(capturees.length != 1) {
+          console.error("Something is wrong with capture")
+        } else {
+          await miro.board.remove(capturees[0])
+        }
+      }
+
       setRow = newRow
       setCol = newCol
     } catch (error) {
