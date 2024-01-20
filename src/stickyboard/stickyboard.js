@@ -63,12 +63,15 @@ const placePiece = async (frame, type='♚', color='w', row, col) => {
 const placeStartingPieces = async (frame) => {
   const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜']
 
-  pieces.forEach( async (p, i) => {
+  const promises = pieces.map( async (p, i) => {
     await placePiece(frame, p, 'w', 0, i)
     await placePiece(frame, '♟', 'w', 1, i)
     await placePiece(frame, '♟', 'b', 6, i)
     await placePiece(frame, p, 'b', 7, i)
   });
+
+  console.log(promises)
+  Promise.all(promises)
 }
 
 export const createBoard = async (boardX=0, boardY=0) => {
