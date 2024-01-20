@@ -117,8 +117,8 @@ export const movePiece = async ({frame, chess}, piece) => {
 
   const {row: newRow, col: newCol} = positionForCoords(frame, piece.x, piece.y)
   const {row: oldRow, col: oldCol} = await piece.getMetadata('position')
-  var setRow = oldRow;
-  var setCol = oldCol;
+  let setRow = oldRow;
+  let setCol = oldCol;
 
   if( newRow >= 0 && newRow < cellsInBoard && 
       newCol >= 0 && newCol < cellsInBoard &&
@@ -136,7 +136,7 @@ export const movePiece = async ({frame, chess}, piece) => {
 
       console.log(move)
 
-      if(move.san.includes('x')) { //if there was a capture
+      if(move.flags.includes('c') || move.flags.includes('e')) { //if there was a capture
         /* Captures are kinda hard since we need to find the item
            Seems like we have basically two options: either set piece's square as a tag
            or just iterate through all of the frame's items and find the right one.
@@ -145,13 +145,29 @@ export const movePiece = async ({frame, chess}, piece) => {
            There is also a third option - to keep track of it in a map on our side. But I guess I will try out searching first
         */
 
+        console.log(move.san)
+
         const children = await frame.getChildren();
-        const capturees = children.filter((e) => e.content) //only the pieces
-          .filter((p) => {
-            const {row, col} = positionForCoords(frame, p.x, p.y);
-            return row == newRow && col == newCol;
-          })
-          .filter((p) => p.id != piece.id)
+        const pieces = children.filter((e) => e.content)
+        let capturees = []
+
+        if(move.flags.includes('e')) {
+          // En passant
+          const epRow = newRow == 2 ? 3 : 4;
+          capturees = pieces
+            .filter((p) => {
+              const {row, col} = positionForCoords(frame, p.x, p.y);
+              return row == epRow && col == newCol;
+            })
+        } else {
+          // Standard capture
+          capturees = pieces
+            .filter((p) => {
+              const {row, col} = positionForCoords(frame, p.x, p.y);
+              return row == newRow && col == newCol;
+            })
+            .filter((p) => p.id != piece.id)
+        }
 
         if(capturees.length != 1) {
           console.error("Something is wrong with capture")
