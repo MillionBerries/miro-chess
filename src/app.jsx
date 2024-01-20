@@ -4,6 +4,8 @@ import {createRoot} from 'react-dom/client';
 import '../src/assets/style.css';
 import congratulationsImg from './assets/congratulations.png'
 
+import {createBoard, movePiece} from './stickyboard/stickyboard.js'
+
 async function addSticky() {
   const stickyNote = await miro.board.createStickyNote({
     content: 'Hello, World!',
@@ -12,9 +14,21 @@ async function addSticky() {
   await miro.board.viewport.zoomTo(stickyNote);
 }
 
+const initializeBoard = async () => {
+  console.log("REINITIALIZED__________________________")
+
+  const frame = await createBoard();
+
+  miro.board.ui.on('experimental:items:update', async (evt) => {
+    if(evt.items.length == 1 && frame.childrenIds.includes(evt.items[0].id)) {
+      movePiece(frame, evt.items[0])
+    }
+  });
+}
+
 const App = () => {
   React.useEffect(() => {
-    addSticky();
+    initializeBoard();
   }, []);
 
   return (
