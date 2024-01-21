@@ -6,9 +6,8 @@ import congratulationsImg from './assets/congratulations.png'
 
 const App = () => {
   React.useEffect(() => {
-    // If you don't listen for this event in app.js, drag&drop doesn't work (or I was doing something wrong)
     miro.board.ui.on('drop', async (evt) => {
-      console.log("app.jsx", evt)
+      // Setting this event handler is required for matching handle in index.js to work.
     });
   }, []);
 

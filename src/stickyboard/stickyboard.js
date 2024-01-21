@@ -1,7 +1,19 @@
 import { Chess } from 'chess.js'
 
-const cellSize = 50;
-const cellsInBoard = 8;
+const CellSize = 50;
+const CellsInBoard = 8;
+
+const BrightCellColor = '#f7d18b';
+const DarkCellColor = '#a77858';
+
+const PieceCharToEmojiMap = new Map([
+  ['p', '♟'],
+  ['n', '♞'],
+  ['b', '♝'],
+  ['r', '♜'],
+  ['q', '♛'],
+  ['k', '♚'],
+]);
 
 const frameXY = (frame) => {
   return {
@@ -14,210 +26,269 @@ const coordsForPosition = (frame, row, col) => {
   const {frameX, frameY} = frameXY(frame);
   
   return {
-    x: frameX + col * cellSize + cellSize / 2,
-    y: frameY + frame.height - (row * cellSize + cellSize / 2),
+    x: frameX + col * CellSize + CellSize / 2,
+    y: frameY + frame.height - (row * CellSize + CellSize / 2),
   };
-}
-
-const positionForCoords = (frame, x, y) => {
-  const {frameX, frameY} = frameXY(frame);
-  console.log(frameX, frameY)
-  console.log(frame)
-
-  return {
-    row: Math.round((frameY + frame.height - y - cellSize / 2) / cellSize),
-    col: Math.round((x - frameX - cellSize / 2) / cellSize),
-  }
 }
 
 const notationForPosition = (row, col) => {
   return 'abcdefgh'[col] + (row+1);
 }
 
-const positionForNotation = (notation) => {
-  assert(false, "Not implemented")
+/* 
+  const piece = new Piece('♜', 'w', 3, 4);
+  await piece.createOrRestoreShapeAsync(frame);
+*/
+const Piece = function(type, color, row, col) {
+  this.type = type;
+  this.color = color;
+  this.row = row;
+  this.col = col;
+
+  this.shape = null;
+
+  this.deleteShape = async () => {
+    if (this.shape === null) {
+      return;
+    }
+
+    await miro.board.remove(this.shape);
+    console.log("miro.board.remove");
+  };
+
+  this.createOrRestoreShapeAsync = async (frame) => {
+    // Check if there were any changes to the piece.
+    // If there are any - delete it and re-create
+
+    if (this.shape !== null) {
+      this.shape = await miro.board.getById(this.shape.id);
+      console.log("miro.board.getById");
+    }
+
+    if (this.shape !== null) {
+      // console.log("Checking piece stats", this.shape.content !== this.type);
+      // console.log("Checking piece stats", this.shape.parentId !== frame.id);
+      // console.log("Checking piece stats", this.shape.x !== this.col * CellSize + CellSize / 2);
+      // console.log("Checking piece stats", this.shape.y !== (7 - this.row) * CellSize + CellSize / 2);
+      // console.log("Checking piece stats", this.shape.style.color, (this.color == 'w' ? '#eeeeee' : '#111111'));
+
+      if (
+        this.shape.content !== this.type ||
+        this.shape.parentId !== frame.id ||
+        this.shape.x !== this.col * CellSize + CellSize / 2 ||
+        this.shape.y !== (7 - this.row) * CellSize + CellSize / 2 ||
+        this.shape.style.color !== (this.color == 'w' ? '#eeeeee' : '#111111'))
+      {
+        await miro.board.remove(this.shape);
+        console.log("miro.board.remove");
+        this.shape = null;
+      }
+    }
+
+    if (this.shape === null) {
+      console.log("miro.board.createShape");
+      this.shape = await miro.board.createShape({
+        shape: 'rectangle',
+
+        content: this.type,
+
+        x: coordsForPosition(frame, this.row, this.col).x,
+        y: coordsForPosition(frame, this.row, this.col).y,
+
+        width: CellSize,
+        height: CellSize,
+
+        style: {
+          borderWidth: 0,
+          fillOpacity: 0,
+          color: this.color == 'w' ? '#eeeeee' : '#111111',
+          fontSize: 40,
+        },
+      });
+
+      await frame.add(this.shape);
+    }
+
+    return this.shape.id;
+  };
+
+  this.getCurrentCell = async (frame) => {
+    // TODO: return current closest cell that this piece resides on
+    return [0, 0];
+  };
 }
 
-const placePiece = async (frame, type='♚', color='w', row, col) => {
-  const {frameX, frameY} = frameXY(frame);
+const StickyBoard = function() {
+  this.chess = new Chess();
 
-  const shape = await miro.board.createShape({
-    shape: 'rectangle',
-    content: type,
+  this.frame = null;
+  this.darkCellIds = null;
+  this.placedPieces = null;
 
-    width: cellSize,
-    height: cellSize,
-    x: coordsForPosition(frame, row, col).x,
-    y: coordsForPosition(frame, row, col).y,
+  this.createBoardAsync = async (boardX, boardY) => {
+    console.log("miro.board.createFrame");
+    const frame = await miro.board.createFrame({
+      title: 'Chess board',
 
-    style: {
-      borderWidth: 0,
-      fillOpacity: 0,
-      color: color == 'w' ? '#eee' : '#111',
-      fontSize: 40,
-    },
+      x: boardX + CellsInBoard * CellSize / 2,
+      y: boardY + CellsInBoard * CellSize / 2,
+
+      width: CellsInBoard * CellSize,
+      height: CellsInBoard * CellSize,
+
+      style: {
+        fillColor: BrightCellColor,
+      },
     });
 
-  await shape.setMetadata('position', {row, col});
-  await frame.add(shape);
-}
+    const darkCellIds = new Array();
 
-const placeStartingPieces = async (frame) => {
-  const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜']
+    for (let row = 0; row < CellsInBoard; row++) {
+      for (let col = 0; col < CellsInBoard; col++) {
+        if ((row + col) % 2 == 1) {
+          continue;
+        }
 
-  const promises = pieces.map( async (p, i) => {
-    await placePiece(frame, p, 'w', 0, i)
-    await placePiece(frame, '♟', 'w', 1, i)
-    await placePiece(frame, '♟', 'b', 6, i)
-    await placePiece(frame, p, 'b', 7, i)
-  });
+        console.log("miro.board.createShape");
+        const shape = await miro.board.createShape({
+          shape: 'rectangle',
 
-  console.log(promises)
-  Promise.all(promises)
-}
+          x: coordsForPosition(frame, row, col).x,
+          y: coordsForPosition(frame, row, col).y,
 
-export const createBoard = async (boardX=0, boardY=0) => {
-  const frame = await miro.board.createFrame({
-    title: 'Chess board',
-    style: {
-    fillColor: '#ffffff',
-    },
-    x: boardX + cellsInBoard * cellSize / 2,
-    y: boardY + cellsInBoard * cellSize / 2,
-    width: cellsInBoard * cellSize,
-    height: cellsInBoard * cellSize,
-    origin: 'center', // the only supported
-  });
-
-  for (let row = 0; row < cellsInBoard; row++) {
-    for (let col = 0; col < cellsInBoard; col++) {
-      const shape = await miro.board.createShape({
-      shape: 'rectangle',
-   
-      relativeTo: 'parent_top_left',
-      width: cellSize,
-      height: cellSize,
-      x: coordsForPosition(frame, row, col).x,
-      y: coordsForPosition(frame, row, col).y,
-   
-      style: {
-        fillColor: (row + col) % 2 == 0 ? '#a77858' : '#f7d18b',
-      },
-      });
-   
-      await frame.add(shape);
+          width: CellSize,
+          height: CellSize,
+       
+          style: {
+            fillColor: DarkCellColor,
+            borderWidth: 0,
+          },
+        });
+     
+        await frame.add(shape);
+        darkCellIds.push(shape.id);
+      }
     }
-  }
 
-  //await placePiece(frame, '♚', 'w', 0, 0)
-  await placeStartingPieces(frame);
+    const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜'].flatMap((p, i) => {
+      return [
+        new Piece(   p, 'w', 0, i),
+        new Piece('♟', 'w', 1, i),
+        new Piece('♟', 'b', 6, i),
+        new Piece(   p, 'b', 7, i),
+      ];
+    });
 
-  const chess = new Chess()
-  
-  return {frame, chess}
-}
+    const pieceIds = await Promise.all(pieces.map((p) => p.createOrRestoreShapeAsync(frame)));
+    const placedPieces = new Map(pieceIds.map((pieceId, i) => [pieceId, pieces[i]]));
 
-const movePieceItem = async (frame, piece, row, col) => {
-  await frame.remove(piece);
-  const {x, y} = coordsForPosition(frame, row, col);
-  piece.x = x
-  piece.y = y
-  await piece.setMetadata('position', {row, col});
-  await piece.sync();
-  await frame.add(piece);
-}
+    this.frame = frame;
+    this.darkCellIds = darkCellIds;
+    this.placedPieces = placedPieces;
+  };
 
-export const movePiece = async ({frame, chess}, piece) => {
-  console.log(piece);
-  console.log(chess.ascii())
+  this.handlePieceMovement = async (piece, item) => {
+    if (item.parentId === null || item.parentId !== piece.shape.parentId) {
+      // The piece was moved outside the board (or lost parent somehow)
+      return;
+    }
 
-  const {row: newRow, col: newCol} = positionForCoords(frame, piece.x, piece.y)
-  const {row: oldRow, col: oldCol} = await piece.getMetadata('position')
-  let setRow = oldRow;
-  let setCol = oldCol;
+    if (item.relativeTo !== 'parent_top_left') {
+      throw Exception("assert: item has parent, but is not relative to the top left?");
+    }
 
-  console.log(oldRow, oldCol);
-  console.log(newRow, newCol);
+    const [cellX, cellY] = [Math.floor(item.x / CellSize), Math.floor(item.y / CellSize)];
+    if (cellX < 0 || cellX > 7 || cellY < 0 || cellY > 7) {
+      return;
+    }
 
-  if( newRow >= 0 && newRow < cellsInBoard && 
-      newCol >= 0 && newCol < cellsInBoard &&
-      (newRow != oldRow || newCol != oldCol)
-  ) {
-    const oldNotation = notationForPosition(oldRow, oldCol);
-    const newNotation = notationForPosition(newRow, newCol);
+    const [row, col] = [7 - cellY, cellX];
+    if (row === piece.row && col === piece.col) {
+      return;
+    }
 
-    console.log(oldNotation, newNotation);
-
+    let move = null;
     try {
-      const move = chess.move({from: oldNotation, to: newNotation})
+      move = this.chess.move({from: notationForPosition(piece.row, piece.col), to: notationForPosition(row, col)})
+    } catch (e) {
+      if (e.message.startsWith('Invalid move')) {
+        return;
+      }
 
-      console.log(move)
+      throw e;
+    }
+  };
 
-      if(move.flags.includes('c') || move.flags.includes('e')) { //if there was a capture
-        /* Captures are kinda hard since we need to find the item
-           Seems like we have basically two options: either set piece's square as a tag
-           or just iterate through all of the frame's items and find the right one.
-           Both suck, since former requires keeping track of the tag handles - yes you cannot get tags by name, nice API
-           And also seems like tags are gonna be drawn
-           There is also a third option - to keep track of it in a map on our side. But I guess I will try out searching first
-        */
+  this.applyItemUpdateAsync = async (item) => {
+    console.log("applyItemUpdateAsync");
+    const piece = this.placedPieces.get(item.id);
+    if (piece !== undefined) {
+      await this.handlePieceMovement(piece, item);
 
-        console.log(move.san)
+      const grid = (new Array(CellsInBoard * CellsInBoard)).fill(null);
+      for (const [_, placedPiece] of this.placedPieces) {
+        grid[placedPiece.row * CellsInBoard + placedPiece.col] = placedPiece;
+      }
 
-        const children = await frame.getChildren();
-        const pieces = children.filter((e) => e.content)
-        let capturees = []
+      const dirty = (new Array(CellsInBoard * CellsInBoard)).fill(true);
+      this.placedPieces = new Map();
+      for (let row = 0; row < CellsInBoard; row++) {
+        for (let col = 0; col < CellsInBoard; col++) {
+          const pos = notationForPosition(row, col);
+          const reality = this.chess.get(pos);
+          if (!reality && grid[row * CellsInBoard + col] !== null) {
+            await grid[row * CellsInBoard + col].deleteShape();
+            grid[row * CellsInBoard + col] = null;
+          } else if (!!reality && grid[row * CellsInBoard + col] === null) {
+            grid[row * CellsInBoard + col] = new Piece(PieceCharToEmojiMap.get(reality.type), reality.color, row, col);
+          } else if (!!reality && grid[row * CellsInBoard + col] !== null) {
+            // Check fields are correct
+            const tmp = grid[row * CellsInBoard + col];
+            if (tmp.row === row && tmp.col === col && tmp.type === PieceCharToEmojiMap.get(reality.type) && tmp.color == reality.color) {
+              dirty[row * CellsInBoard + col] = false;
+            } else {
+              grid[row * CellsInBoard + col].row = row;
+              grid[row * CellsInBoard + col].col = col;
+              grid[row * CellsInBoard + col].type = PieceCharToEmojiMap.get(reality.type);
+              grid[row * CellsInBoard + col].color = reality.color;
+            }
+          } else {
+            dirty[row * CellsInBoard + col] = false;
+          }
 
-        if(move.flags.includes('e')) {
-          // En passant
-          const epRow = newRow == 2 ? 3 : 4;
-          capturees = pieces
-            .filter((p) => {
-              const {row, col} = positionForCoords(frame, p.x, p.y);
-              return row == epRow && col == newCol;
-            })
-        } else {
-          // Standard capture
-          capturees = pieces
-            .filter((p) => {
-              const {row, col} = positionForCoords(frame, p.x, p.y);
-              return row == newRow && col == newCol;
-            })
-            .filter((p) => p.id != piece.id)
-        }
-
-        if(capturees.length != 1) {
-          console.error("Something is wrong with capture")
-        } else {
-          await miro.board.remove(capturees[0])
-        }
-      } else if(move.flags.includes('k') || move.flags.includes('q')) {
-        // castling
-        const cStartCol = move.flags.includes('q') ? 0 : 7
-        const cEndCol = move.flags.includes('q') ? 3 : 5
-
-        const children = await frame.getChildren();
-        const pieces = children.filter((e) => e.content)
-        const castlees = pieces
-          .filter((p) => {
-            const {row, col} = positionForCoords(frame, p.x, p.y);
-            return row == newRow && col == cStartCol;
-          })
-
-        if(castlees.length != 1) {
-          console.error("Something is wrong with castling")
-        } else {
-          await movePieceItem(frame, castlees[0], newRow, cEndCol)
+          if (grid[row * CellsInBoard + col] !== null) {
+            if (grid[row * CellsInBoard + col] === piece || dirty[row * CellsInBoard + col]) {
+              console.log("Dirty", row, col);
+              const newId = await grid[row * CellsInBoard + col].createOrRestoreShapeAsync(this.frame);
+              this.placedPieces.set(newId, grid[row * CellsInBoard + col]);
+            } else {
+              this.placedPieces.set(grid[row * CellsInBoard + col].shape.id, grid[row * CellsInBoard + col]);
+            }
+          }
         }
       }
 
-      setRow = newRow
-      setCol = newCol
-    } catch (error) {
-      console.log('Made an invalid move', error)
+      return true;
     }
-    
-  }
 
-  await movePieceItem(frame, piece, setRow, setCol);
-}
+    return false;
+  };
+
+  this.applyItemUpdateByIdAsync = async (itemId) => {
+    console.log("Checking update by id not implemented");
+
+    return false;
+  };
+
+  this.applyItemDeleteAsync = async (item) => {
+    return await this.applyItemDeleteByIdAsync(item.id);
+  };
+
+  this.applyItemDeleteByIdAsync = async (itemId) => {
+    console.log("Checking delete by id not implemented");
+
+    return false;
+  };
+};
+
+export default StickyBoard;
