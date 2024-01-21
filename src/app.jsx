@@ -61,15 +61,6 @@ const App = () => {
       <div className="cs1 ce12">
         <img src={congratulationsImg} alt="" />
       </div>
-      <div className="cs1 ce12">
-        <a
-          className="button button-primary"
-          target="_blank"
-          href="https://developers.miro.com"
-        >
-          Delete all boards
-        </a>
-      </div>
       <div class="scoreboard">
        <div>Current Score: </div>
        <div>WHITES: {whites}</div>
