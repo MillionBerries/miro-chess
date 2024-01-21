@@ -35,6 +35,17 @@ const notationForPosition = (row, col) => {
   return 'abcdefgh'[col] + (row + 1);
 };
 
+const giveScore = async (board) => {
+  const whoWon = board.whoseTurn() === 'w' ? 'blacks' : 'whites';
+  const chessCollection = miro.board.storage.collection('chess');
+  const currentScore = await chessCollection.get(whoWon);
+  console.log('CURRENT SCORE: ', currentScore);
+  const finalScore = currentScore + 1;
+  console.log('FINAL SCORE: ', finalScore);
+  console.log('FINAL SCORE TYPE: ', typeof finalScore);
+  await miro.board.storage.collection('chess').set(whoWon, currentScore + 1);
+};
+
 const finishTheGame = async (board) => {
   const whoseTurn = board.whoseTurn() === 'w' ? 'White' : 'Black';
   const stickyNoteText = board.isCheckmate()
@@ -58,6 +69,7 @@ const finishTheGame = async (board) => {
     shape: 'square',
     width: board.frame.width / 2,
   });
+  giveScore(board);
 };
 
 

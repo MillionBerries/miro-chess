@@ -5,7 +5,7 @@ const boardsOwnedByThisScript = new Map();
 // NOTE: seems impossible for now, unless we explicitly create metadata for each item
 // But checking metadata for each item is costly!
 
-console.log('Warning: index script realoded. Lost all refs to previous boards');
+console.log('Warning: index script reloaded. Lost all refs to previous boards');
 
 const createStickyBoardAtPosition = async (boardX, boardY) => {
   const board = new StickyBoard();
