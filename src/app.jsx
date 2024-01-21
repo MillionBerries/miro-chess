@@ -61,7 +61,7 @@ const App = () => {
       <div className="cs1 ce12">
         <img src={congratulationsImg} alt="" />
       </div>
-      <div class="scoreboard">
+      <div className="scoreboard">
        <div>Current Score: </div>
        <div>WHITES: {whites}</div>
        <div>BLACKS: {blacks}</div>
