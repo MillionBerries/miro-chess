@@ -44,11 +44,13 @@ const init = async () => {
     }
 
     if (unhandled.length > 0) {
+      console.log("Broadcasting chess update events", unhandled);
       await miro.board.events.broadcast('milber.chess.update', unhandled);
     }
   });
 
   miro.board.events.on('milber.chess.update', async (itemIds) => {
+    console.log("Received update from broadcast", itemIds);
     for (const itemId of itemIds) {
       for (const [boardId, board] of boardsOwnedByThisScript) {
         if (await board.applyItemUpdateByIdAsync(item.id)) {
