@@ -57,7 +57,7 @@ const finishTheGame = async (board) => {
     : board.isThreefoldRepetition()
     ? 'Threefold Repetition'
     : '';
-  await miro.board.createStickyNote({
+  const finalNote = await miro.board.createStickyNote({
     content: 'The game is finished 🎉 \n' + stickyNoteText,
     style: {
       fillColor: 'light_pink',
@@ -69,9 +69,9 @@ const finishTheGame = async (board) => {
     shape: 'square',
     width: board.frame.width / 2,
   });
+  board.frame.add(finalNote);
   giveScore(board);
 };
-
 
 /* 
   const piece = new Piece('♜', 'w', 3, 4);
@@ -344,7 +344,6 @@ const StickyBoard = function () {
   };
 
   this.applyItemDeleteByIdAsync = async (itemId) => {
-
     return false;
   };
 
