@@ -1,4 +1,4 @@
-import { Chess } from 'chess.js'
+import { Chess } from 'chess.js';
 
 const CellSize = 50;
 const CellsInBoard = 8;
@@ -19,27 +19,27 @@ const frameXY = (frame) => {
   return {
     frameX: frame.x - frame.width / 2,
     frameY: frame.y - frame.height / 2,
-  }
-}
+  };
+};
 
 const coordsForPosition = (frame, row, col) => {
-  const {frameX, frameY} = frameXY(frame);
-  
+  const { frameX, frameY } = frameXY(frame);
+
   return {
     x: frameX + col * CellSize + CellSize / 2,
     y: frameY + frame.height - (row * CellSize + CellSize / 2),
   };
-}
+};
 
 const notationForPosition = (row, col) => {
-  return 'abcdefgh'[col] + (row+1);
-}
+  return 'abcdefgh'[col] + (row + 1);
+};
 
 /* 
   const piece = new Piece('♜', 'w', 3, 4);
   await piece.createOrRestoreShapeAsync(frame);
 */
-const Piece = function(type, color, row, col) {
+const Piece = function (type, color, row, col) {
   this.type = type;
   this.color = color;
   this.row = row;
@@ -53,7 +53,7 @@ const Piece = function(type, color, row, col) {
     }
 
     await miro.board.remove(this.shape);
-    console.log("miro.board.remove");
+    console.log('miro.board.remove');
   };
 
   this.createOrRestoreShapeAsync = async (frame) => {
@@ -62,7 +62,7 @@ const Piece = function(type, color, row, col) {
 
     if (this.shape !== null) {
       this.shape = await miro.board.getById(this.shape.id);
-      console.log("miro.board.getById");
+      console.log('miro.board.getById');
     }
 
     if (this.shape !== null) {
@@ -77,16 +77,16 @@ const Piece = function(type, color, row, col) {
         this.shape.parentId !== frame.id ||
         this.shape.x !== this.col * CellSize + CellSize / 2 ||
         this.shape.y !== (7 - this.row) * CellSize + CellSize / 2 ||
-        this.shape.style.color !== (this.color == 'w' ? '#eeeeee' : '#111111'))
-      {
+        this.shape.style.color !== (this.color == 'w' ? '#eeeeee' : '#111111')
+      ) {
         await miro.board.remove(this.shape);
-        console.log("miro.board.remove");
+        console.log('miro.board.remove');
         this.shape = null;
       }
     }
 
     if (this.shape === null) {
-      console.log("miro.board.createShape");
+      console.log('miro.board.createShape');
       this.shape = await miro.board.createShape({
         shape: 'rectangle',
 
@@ -116,9 +116,9 @@ const Piece = function(type, color, row, col) {
     // TODO: return current closest cell that this piece resides on
     return [0, 0];
   };
-}
+};
 
-const StickyBoard = function() {
+const StickyBoard = function () {
   this.chess = new Chess();
 
   this.frame = null;
@@ -126,12 +126,12 @@ const StickyBoard = function() {
   this.placedPieces = null;
 
   this.createBoardAsync = async (boardX, boardY) => {
-    console.log("miro.board.createFrame");
+    console.log('miro.board.createFrame');
     const frame = await miro.board.createFrame({
       title: 'Chess board',
 
-      x: boardX + CellsInBoard * CellSize / 2,
-      y: boardY + CellsInBoard * CellSize / 2,
+      x: boardX + (CellsInBoard * CellSize) / 2,
+      y: boardY + (CellsInBoard * CellSize) / 2,
 
       width: CellsInBoard * CellSize,
       height: CellsInBoard * CellSize,
@@ -149,7 +149,7 @@ const StickyBoard = function() {
           continue;
         }
 
-        console.log("miro.board.createShape");
+        console.log('miro.board.createShape');
         const shape = await miro.board.createShape({
           shape: 'rectangle',
 
@@ -158,28 +158,30 @@ const StickyBoard = function() {
 
           width: CellSize,
           height: CellSize,
-       
+
           style: {
             fillColor: DarkCellColor,
             borderWidth: 0,
           },
         });
-     
+
         await frame.add(shape);
         darkCellIds.push(shape.id);
       }
     }
 
-    const pieces = ['♜','♞','♝','♛','♚','♝','♞','♜'].flatMap((p, i) => {
+    const pieces = ['♜', '♞', '♝', '♛', '♚', '♝', '♞', '♜'].flatMap((p, i) => {
       return [
-        new Piece(   p, 'w', 0, i),
+        new Piece(p, 'w', 0, i),
         new Piece('♟', 'w', 1, i),
         new Piece('♟', 'b', 6, i),
-        new Piece(   p, 'b', 7, i),
+        new Piece(p, 'b', 7, i),
       ];
     });
 
-    const pieceIds = await Promise.all(pieces.map((p) => p.createOrRestoreShapeAsync(frame)));
+    const pieceIds = await Promise.all(
+      pieces.map((p) => p.createOrRestoreShapeAsync(frame)),
+    );
     const placedPieces = new Map(pieceIds.map((pieceId, i) => [pieceId, pieces[i]]));
 
     this.frame = frame;
@@ -194,7 +196,7 @@ const StickyBoard = function() {
     }
 
     if (item.relativeTo !== 'parent_top_left') {
-      throw Exception("assert: item has parent, but is not relative to the top left?");
+      throw Exception('assert: item has parent, but is not relative to the top left?');
     }
 
     const [cellX, cellY] = [Math.floor(item.x / CellSize), Math.floor(item.y / CellSize)];
@@ -209,7 +211,10 @@ const StickyBoard = function() {
 
     let move = null;
     try {
-      move = this.chess.move({from: notationForPosition(piece.row, piece.col), to: notationForPosition(row, col)})
+      move = this.chess.move({
+        from: notationForPosition(piece.row, piece.col),
+        to: notationForPosition(row, col),
+      });
     } catch (e) {
       if (e.message.startsWith('Invalid move')) {
         return;
@@ -220,17 +225,17 @@ const StickyBoard = function() {
   };
 
   this.applyItemUpdateAsync = async (item) => {
-    console.log("applyItemUpdateAsync");
+    console.log('applyItemUpdateAsync');
     const piece = this.placedPieces.get(item.id);
     if (piece !== undefined) {
       await this.handlePieceMovement(piece, item);
 
-      const grid = (new Array(CellsInBoard * CellsInBoard)).fill(null);
+      const grid = new Array(CellsInBoard * CellsInBoard).fill(null);
       for (const [_, placedPiece] of this.placedPieces) {
         grid[placedPiece.row * CellsInBoard + placedPiece.col] = placedPiece;
       }
 
-      const dirty = (new Array(CellsInBoard * CellsInBoard)).fill(true);
+      const dirty = new Array(CellsInBoard * CellsInBoard).fill(true);
       this.placedPieces = new Map();
       for (let row = 0; row < CellsInBoard; row++) {
         for (let col = 0; col < CellsInBoard; col++) {
@@ -240,11 +245,21 @@ const StickyBoard = function() {
             await grid[row * CellsInBoard + col].deleteShape();
             grid[row * CellsInBoard + col] = null;
           } else if (!!reality && grid[row * CellsInBoard + col] === null) {
-            grid[row * CellsInBoard + col] = new Piece(PieceCharToEmojiMap.get(reality.type), reality.color, row, col);
+            grid[row * CellsInBoard + col] = new Piece(
+              PieceCharToEmojiMap.get(reality.type),
+              reality.color,
+              row,
+              col,
+            );
           } else if (!!reality && grid[row * CellsInBoard + col] !== null) {
             // Check fields are correct
             const tmp = grid[row * CellsInBoard + col];
-            if (tmp.row === row && tmp.col === col && tmp.type === PieceCharToEmojiMap.get(reality.type) && tmp.color == reality.color) {
+            if (
+              tmp.row === row &&
+              tmp.col === col &&
+              tmp.type === PieceCharToEmojiMap.get(reality.type) &&
+              tmp.color == reality.color
+            ) {
               dirty[row * CellsInBoard + col] = false;
             } else {
               grid[row * CellsInBoard + col].row = row;
@@ -257,12 +272,20 @@ const StickyBoard = function() {
           }
 
           if (grid[row * CellsInBoard + col] !== null) {
-            if (grid[row * CellsInBoard + col] === piece || dirty[row * CellsInBoard + col]) {
-              console.log("Dirty", row, col);
-              const newId = await grid[row * CellsInBoard + col].createOrRestoreShapeAsync(this.frame);
+            if (
+              grid[row * CellsInBoard + col] === piece ||
+              dirty[row * CellsInBoard + col]
+            ) {
+              console.log('Dirty', row, col);
+              const newId = await grid[
+                row * CellsInBoard + col
+              ].createOrRestoreShapeAsync(this.frame);
               this.placedPieces.set(newId, grid[row * CellsInBoard + col]);
             } else {
-              this.placedPieces.set(grid[row * CellsInBoard + col].shape.id, grid[row * CellsInBoard + col]);
+              this.placedPieces.set(
+                grid[row * CellsInBoard + col].shape.id,
+                grid[row * CellsInBoard + col],
+              );
             }
           }
         }
@@ -275,7 +298,7 @@ const StickyBoard = function() {
   };
 
   this.applyItemUpdateByIdAsync = async (itemId) => {
-    console.log("Checking update by id not implemented");
+    console.log('Checking update by id not implemented');
 
     return false;
   };
@@ -285,9 +308,33 @@ const StickyBoard = function() {
   };
 
   this.applyItemDeleteByIdAsync = async (itemId) => {
-    console.log("Checking delete by id not implemented");
+    console.log('Checking delete by id not implemented');
 
     return false;
+  };
+
+  this.isGameFinished = () => {
+    return this.chess.isGameOver();
+  };
+
+  this.isCheckmate = () => {
+    return this.chess.isCheckmate();
+  };
+
+  this.isDraw = () => {
+    return this.chess.isDraw();
+  };
+
+  this.isStalemate = () => {
+    return this.chess.isStalemate();
+  };
+
+  this.isThreefoldRepetition = () => {
+    return this.chess.isThreefoldRepetition();
+  };
+
+  this.whoseTurn = () => {
+    return this.chess.turn();
   };
 };
 
