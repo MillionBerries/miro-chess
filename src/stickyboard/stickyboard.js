@@ -229,6 +229,7 @@ const StickyBoard = function () {
       move = this.chess.move({
         from: notationForPosition(piece.row, piece.col),
         to: notationForPosition(row, col),
+        promotion: 'q',
       });
     } catch (e) {
       if (e.message.startsWith('Invalid move')) {
