@@ -5,7 +5,7 @@ const boardsOwnedByThisScript = new Map();
 // NOTE: seems impossible for now, unless we explicitly create metadata for each item
 // But checking metadata for each item is costly!
 
-console.log('Warning: index script realoded. Lost all refs to previous boards');
+console.log('Warning: index script reloaded. Lost all refs to previous boards');
 
 const createStickyBoardAtPosition = async (boardX, boardY) => {
   const board = new StickyBoard();
@@ -13,6 +13,17 @@ const createStickyBoardAtPosition = async (boardX, boardY) => {
 
   boardsOwnedByThisScript.set(board.frame.id, board);
   console.log(board);
+};
+
+const giveScore = async (board) => {
+  const whoWon = board.whoseTurn() === 'w' ? 'blacks' : 'whites';
+  const chessCollection = miro.board.storage.collection('chess');
+  const currentScore = await chessCollection.get(whoWon);
+  console.log('CURRENT SCORE: ', currentScore);
+  const finalScore = currentScore + 1;
+  console.log('FINAL SCORE: ', finalScore);
+  console.log('FINAL SCORE TYPE: ', typeof finalScore);
+  await miro.board.storage.collection('chess').set(whoWon, currentScore + 1);
 };
 
 const finishTheGame = async (board) => {
@@ -38,6 +49,7 @@ const finishTheGame = async (board) => {
     shape: 'square',
     width: board.frame.width / 2,
   });
+  giveScore(board);
 };
 
 const init = async () => {
