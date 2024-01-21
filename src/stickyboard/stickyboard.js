@@ -35,6 +35,32 @@ const notationForPosition = (row, col) => {
   return 'abcdefgh'[col] + (row + 1);
 };
 
+const finishTheGame = async (board) => {
+  const whoseTurn = board.whoseTurn() === 'w' ? 'White' : 'Black';
+  const stickyNoteText = board.isCheckmate()
+    ? `Checkmate. ${whoseTurn} lost`
+    : board.isDraw()
+    ? 'Draw'
+    : board.isStalemate()
+    ? 'Stalemate'
+    : board.isThreefoldRepetition()
+    ? 'Threefold Repetition'
+    : '';
+  await miro.board.createStickyNote({
+    content: 'The game is finished 🎉 \n' + stickyNoteText,
+    style: {
+      fillColor: 'light_pink',
+      textAlign: 'center',
+      textAlignVertical: 'middle',
+    },
+    x: board.frame.x,
+    y: board.frame.y,
+    shape: 'square',
+    width: board.frame.width / 2,
+  });
+};
+
+
 /* 
   const piece = new Piece('♜', 'w', 3, 4);
   await piece.createOrRestoreShapeAsync(frame);
@@ -66,12 +92,6 @@ const Piece = function (type, color, row, col) {
     }
 
     if (this.shape !== null) {
-      // console.log("Checking piece stats", this.shape.content !== this.type);
-      // console.log("Checking piece stats", this.shape.parentId !== frame.id);
-      // console.log("Checking piece stats", this.shape.x !== this.col * CellSize + CellSize / 2);
-      // console.log("Checking piece stats", this.shape.y !== (7 - this.row) * CellSize + CellSize / 2);
-      // console.log("Checking piece stats", this.shape.style.color, (this.color == 'w' ? '#eeeeee' : '#111111'));
-
       if (
         this.shape.content !== this.type ||
         this.shape.parentId !== frame.id ||
@@ -121,6 +141,7 @@ const Piece = function (type, color, row, col) {
 const StickyBoard = function () {
   this.chess = new Chess();
 
+  this.gameEndingConditionsShown = false;
   this.frame = null;
   this.darkCellIds = null;
   this.placedPieces = null;
@@ -225,7 +246,6 @@ const StickyBoard = function () {
   };
 
   this.applyItemUpdateAsync = async (item) => {
-    console.log('applyItemUpdateAsync');
     const piece = this.placedPieces.get(item.id);
     if (piece !== undefined) {
       await this.handlePieceMovement(piece, item);
@@ -289,6 +309,15 @@ const StickyBoard = function () {
             }
           }
         }
+      }
+
+      if (this.isGameFinished() && !this.gameEndingConditionsShown) {
+        this.gameEndingConditionsShown = true;
+
+        console.log('GAME FINISHED: ', this.isGameFinished());
+        console.log('CHECKMATE: ', this.isCheckmate());
+        console.log('TURN: ', this.whoseTurn());
+        await finishTheGame(this);
       }
 
       return true;

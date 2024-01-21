@@ -15,31 +15,6 @@ const createStickyBoardAtPosition = async (boardX, boardY) => {
   console.log(board);
 };
 
-const finishTheGame = async (board) => {
-  const whoseTurn = board.whoseTurn() === 'w' ? 'White' : 'Black';
-  const stickyNoteText = board.isCheckmate()
-    ? `Checkmate. ${whoseTurn} lost`
-    : board.isDraw()
-    ? 'Draw'
-    : board.isStalemate()
-    ? 'Stalemate'
-    : board.isThreefoldRepetition()
-    ? 'Threefold Repetition'
-    : '';
-  await miro.board.createStickyNote({
-    content: 'The game is finished 🎉 \n' + stickyNoteText,
-    style: {
-      fillColor: 'light_pink',
-      textAlign: 'center',
-      textAlignVertical: 'middle',
-    },
-    x: board.frame.x,
-    y: board.frame.y,
-    shape: 'square',
-    width: board.frame.width / 2,
-  });
-};
-
 const init = async () => {
   miro.board.ui.on('icon:click', async () => {
     await miro.board.ui.openPanel({ url: 'app.html' });
@@ -56,12 +31,6 @@ const init = async () => {
         // Check if this update affects a board of us..
         if (await board.applyItemUpdateAsync(item)) {
           affectsAnything = true;
-          if (board.isGameFinished()) {
-            console.log('GAME FINISHED: ', board.isGameFinished());
-            console.log('CHECKMATE: ', board.isCheckmate());
-            console.log('TURN: ', board.whoseTurn());
-            await finishTheGame(board);
-          }
           break;
         }
       }
