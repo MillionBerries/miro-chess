@@ -8,13 +8,20 @@ Being otherwise busy with studies and work, our team wanted to do something fun 
 
 For that, we created a chess game in Miro. It provides an age-proof, mind-stimulating game for Miro users to use **frictionlessly** within their favorite collaboration platform in between meetings. 
 
-We managed to achieve a rather frictionless experience and found out that Miro provides quite a flexible way to develop apps. But it wasn't easy:
+We managed to achieve a rather frictionless experience and found out that Miro provides quite a flexible way to develop apps. But it wasn't easy – see challenges in development below.
+
+### Features:
+- Fully functioning chess game within Miro. Built using Miro elements only.
+- Multiplayer is possible – anyone on the board can play on any board, chess rules will be enforced.
+- Finished game notification
+- Scores for Black and White sides
 
 ### Challenges in development
 
 - Documentation of Miro platform could be improved. The coverage of technical descriptions and specifications is lacking/
 - The API appeared to be cluttered and non-uniform
 - Polluted browser console logs coming from the Miro web app 
+
 
 
 
