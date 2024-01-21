@@ -19,8 +19,6 @@ const App = () => {
   React.useEffect(() => {
     const chessCollection = miro.board.storage.collection('chess');
 
-    console.log("CHESS COLLECTION: ", chessCollection)
-
     async function fetchData() {
       let whitesInitial = await chessCollection.get('whites');
 
@@ -40,16 +38,12 @@ const App = () => {
     fetchData();
 
     chessCollection.onValue('blacks', (score) => {
-      console.log('BLACKS SCORED', score);
       setBlacks((prevBlacks) => prevBlacks + 1);
     });
 
     chessCollection.onValue('whites', (score) => {
-      console.log('WHITES SCORED', score);
       setWhites((prevWhites) => prevWhites + 1);
     });
-
-    console.log('UPDATED COLLECTION: ', chessCollection)
 
     return () => {
     };
