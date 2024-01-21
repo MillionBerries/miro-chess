@@ -79,7 +79,6 @@ const Piece = function (type, color, row, col) {
     }
 
     await miro.board.remove(this.shape);
-    console.log('miro.board.remove');
   };
 
   this.createOrRestoreShapeAsync = async (frame) => {
@@ -88,7 +87,6 @@ const Piece = function (type, color, row, col) {
 
     if (this.shape !== null) {
       this.shape = await miro.board.getById(this.shape.id);
-      console.log('miro.board.getById');
     }
 
     if (this.shape !== null) {
@@ -100,13 +98,11 @@ const Piece = function (type, color, row, col) {
         this.shape.style.color !== (this.color == 'w' ? '#eeeeee' : '#111111')
       ) {
         await miro.board.remove(this.shape);
-        console.log('miro.board.remove');
         this.shape = null;
       }
     }
 
     if (this.shape === null) {
-      console.log('miro.board.createShape');
       this.shape = await miro.board.createShape({
         shape: 'rectangle',
 
@@ -147,7 +143,6 @@ const StickyBoard = function () {
   this.placedPieces = null;
 
   this.createBoardAsync = async (boardX, boardY) => {
-    console.log('miro.board.createFrame');
     const frame = await miro.board.createFrame({
       title: 'Chess board',
 
@@ -170,7 +165,6 @@ const StickyBoard = function () {
           continue;
         }
 
-        console.log('miro.board.createShape');
         const shape = await miro.board.createShape({
           shape: 'rectangle',
 
@@ -296,7 +290,6 @@ const StickyBoard = function () {
               grid[row * CellsInBoard + col] === piece ||
               dirty[row * CellsInBoard + col]
             ) {
-              console.log('Dirty', row, col);
               const newId = await grid[
                 row * CellsInBoard + col
               ].createOrRestoreShapeAsync(this.frame);
@@ -314,9 +307,6 @@ const StickyBoard = function () {
       if (this.isGameFinished() && !this.gameEndingConditionsShown) {
         this.gameEndingConditionsShown = true;
 
-        console.log('GAME FINISHED: ', this.isGameFinished());
-        console.log('CHECKMATE: ', this.isCheckmate());
-        console.log('TURN: ', this.whoseTurn());
         await finishTheGame(this);
       }
 
@@ -341,7 +331,6 @@ const StickyBoard = function () {
   };
 
   this.applyItemDeleteByIdAsync = async (itemId) => {
-    console.log('Checking delete by id not implemented');
 
     return false;
   };
