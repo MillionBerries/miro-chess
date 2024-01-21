@@ -1,5 +1,7 @@
 # Miro Chess App
 
+![alt text](./src/assets/miro-chess.png)
+
 ## About Miro Chess App
 
 The app (for Miro platform) was build for a Miro x Junction hackathon over the course of two evenings. 
