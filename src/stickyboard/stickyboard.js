@@ -327,7 +327,11 @@ const StickyBoard = function () {
   };
 
   this.applyItemUpdateByIdAsync = async (itemId) => {
-    console.log('Checking update by id not implemented');
+    const piece = this.placedPieces.get(itemId);
+    if (piece !== undefined) {
+      const item = await miro.board.getById(itemId);
+      this.applyItemUpdateAsync(item);
+    }
 
     return false;
   };

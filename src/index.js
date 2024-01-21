@@ -25,6 +25,8 @@ const init = async () => {
   });
 
   miro.board.ui.on('experimental:items:update', async (evt) => {
+    const unhandled = new Array();
+
     for (const item of evt.items) {
       let affectsAnything = false;
       for (const [boardId, board] of boardsOwnedByThisScript) {
@@ -36,16 +38,22 @@ const init = async () => {
       }
 
       if (!affectsAnything) {
+        unhandled.push(item.id);
         // console.log("Update missed. Broadcasting.", item);
-        // await miro.board.events.broadcast('milber.chess.update', item.id);
       }
+    }
+
+    if (unhandled.length > 0) {
+      await miro.board.events.broadcast('milber.chess.update', unhandled);
     }
   });
 
-  miro.board.events.on('milber.chess.update', async (itemId) => {
-    for (const [boardId, board] of boardsOwnedByThisScript) {
-      if (await board.applyItemUpdateByIdAsync(item.id)) {
-        break; // Early stopping
+  miro.board.events.on('milber.chess.update', async (itemIds) => {
+    for (const itemId of itemIds) {
+      for (const [boardId, board] of boardsOwnedByThisScript) {
+        if (await board.applyItemUpdateByIdAsync(item.id)) {
+          break; // Early stopping
+        }
       }
     }
   });
